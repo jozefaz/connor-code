@@ -37,8 +37,10 @@ def main():                                      # Program entry point: set ever
 
     clock = pygame.time.Clock()                  # Clock used to cap the frame rate
 
-    camera = Camera()                            # Create the player's camera
+    # Create the world AFTER the OpenGL context exists (World() uploads textures/VBOs to the GPU)
     world = World()                              # Create the world (also builds textures + renderer)
+
+    camera = Camera()                            # Create the player's camera
 
     ground_y = world.get_height_at(0, 0)         # Find the terrain surface height at the origin
     camera.x = 0.5                               # Place the camera near the center of the origin block (X)
