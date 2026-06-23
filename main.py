@@ -32,8 +32,11 @@ def main():
 
     clock = pygame.time.Clock()
 
-    camera = Camera()
+# Create world AFTER OpenGL context exists
     world = World()
+
+    camera = Camera()
+
 
     ground_y = world.get_height_at(0, 0)
     camera.x = 0.5
