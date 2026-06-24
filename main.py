@@ -1,83 +1,91 @@
 # main.py
 # -------------------------------------------------------------------
-# The "director" of the whole program. It creates the window, sets up
-# OpenGL, builds the camera and world, then runs the game loop: read
-# input, update the world, draw everything, repeat ~60 times a second.
+# Entry point for the voxel engine. Creates the window, sets up OpenGL,
+# initializes the camera + world, and runs the main game loop.
 # -------------------------------------------------------------------
-from __future__ import annotations              # Enable modern type-hint syntax on older Python versions
-import sys                                       # Used to exit the program cleanly at the end
-import pygame                                    # Window creation, input handling, and the main clock
-from pygame.locals import DOUBLEBUF, OPENGL, QUIT, KEYDOWN, K_ESCAPE  # Display flags + event/key constants
 
-from glwrap import (                             # Pull GL helpers/constants from our safe wrapper layer
-    glEnable, glClear, glClearColor, glMatrixMode, glLoadIdentity,  # Setup, clearing, and matrix functions
-    gluPerspective, GL_DEPTH_TEST, GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT,  # Projection + capability/clear flags
-    GL_MODELVIEW, GL_PROJECTION, glRotatef, glTranslatef  # Matrix modes + transforms used by the camera
+import pygame
+from pygame.locals import DOUBLEBUF, OPENGL, QUIT
+
+from OpenGL.GL import (
+    glEnable,
+    glClearColor,
+    glClear,
+    glMatrixMode,
+    glLoadIdentity,
+    GL_COLOR_BUFFER_BIT,
+    GL_DEPTH_BUFFER_BIT,
+    GL_DEPTH_TEST,
+    GL_LEQUAL,
+    GL_PROJECTION,
+    GL_MODELVIEW,
+    glDepthFunc,
 )
+from OpenGL.GLU import gluPerspective
 
-from camera import Camera                        # The fly camera that turns input into a view
-from world import World                          # The world that generates terrain and draws chunks
-
-
-def main():                                      # Program entry point: set everything up and run the loop
-    pygame.init()                                # Start up all the pygame subsystems
-
-    WIDTH, HEIGHT = 1920, 1080                   # Window size in pixels
-    pygame.display.set_mode((WIDTH, HEIGHT), DOUBLEBUF | OPENGL)  # Open an OpenGL window with double buffering
-    pygame.display.set_caption("Minecraft New worlds")  # Set the window title bar text
-
-    pygame.event.set_grab(True)                  # Lock the mouse to the window (for continuous looking)
-    pygame.mouse.set_visible(False)              # Hide the cursor while playing
-
-    glEnable(GL_DEPTH_TEST)                       # Enable depth testing so nearer blocks hide farther ones
-
-    glMatrixMode(GL_PROJECTION)                  # Switch to the projection matrix to set up the lens
-    gluPerspective(75, WIDTH / HEIGHT, 0.1, 100.0)  # 75° field of view, screen aspect, near 0.1, far 100
-    glMatrixMode(GL_MODELVIEW)                   # Switch back to the model-view matrix for camera/world transforms
-
-    clock = pygame.time.Clock()                  # Clock used to cap the frame rate
-
-    # Create the world AFTER the OpenGL context exists (World() uploads textures/VBOs to the GPU)
-    world = World()                              # Create the world (also builds textures + renderer)
-
-    camera = Camera()                            # Create the player's camera
-
-    ground_y = world.get_height_at(0, 0)         # Find the terrain surface height at the origin
-    camera.x = 0.5                               # Place the camera near the center of the origin block (X)
-    camera.z = 0.5                               # Place the camera near the center of the origin block (Z)
-    camera.y = ground_y + 3.0                    # Start 3 units above the ground so we don't spawn inside terrain
-
-    running = True                               # Loop control flag; set False to quit
-    while running:                               # The main game loop, one pass per frame
-        for event in pygame.event.get():         # Process every queued input/window event
-            if event.type == QUIT:               # Window close button pressed...
-                running = False                  # ...request loop exit
-            elif event.type == KEYDOWN:          # A key was pressed down...
-                if event.key == K_ESCAPE:        # ...and it was Escape...
-                    running = False              # ...so request loop exit
-
-        keys = pygame.key.get_pressed()          # Snapshot of which keys are currently held
-        camera.apply_keyboard(keys)              # Move the camera based on held movement keys
-
-        dx, dy = pygame.mouse.get_rel()          # Mouse movement since the last frame (delta x, delta y)
-        camera.apply_mouse(dx, dy)               # Turn the camera based on that mouse movement
-
-        world.update_visible_chunks(camera)      # Make sure chunks around the camera are generated/loaded
-
-        glLoadIdentity()                         # Reset the model-view matrix for this frame
-        camera.apply_gl_transform(glRotatef, glTranslatef)  # Apply the camera's rotation + position
-
-        glClearColor(0.6, 0.8, 1.0, 1)           # Set the sky-blue background color
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # Clear both the color and depth buffers
-
-        world.draw(camera)                       # Draw all visible chunks
-
-        pygame.display.flip()                    # Swap the back buffer to the screen (show this frame)
-        clock.tick(60)                           # Wait as needed to cap the loop at 60 frames per second
-
-    pygame.quit()                                # Shut down pygame subsystems
-    sys.exit()                                   # Exit the process
+from camera import Camera
+from world import World
 
 
-if __name__ == "__main__":                       # Only run main() when this file is executed directly...
-    main()                                       # ...not when it is imported as a module
+def init_opengl(width: int, height: int) -> None:
+    glEnable(GL_DEPTH_TEST)
+    glDepthFunc(GL_LEQUAL)
+
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(70.0, width / float(height), 0.1, 500.0)
+
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+
+    glClearColor(0.5, 0.7, 1.0, 1.0)  # sky blue
+
+
+def main() -> None:
+    pygame.init()
+    pygame.display.set_caption("Voxel Engine")
+
+    width, height = 1960, 1060
+    screen = pygame.display.set_mode((width, height), DOUBLEBUF | OPENGL)
+
+    init_opengl(width, height)
+
+    clock = pygame.time.Clock()
+
+    pygame.font.init()
+    font = pygame.font.SysFont("Consolas", 20)
+
+    camera = Camera()
+    world = World()
+
+    running = True
+    while running:
+        dt = clock.tick(60) / 1000.0  # seconds
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+
+        keys = pygame.key.get_pressed()
+        camera.update(keys, dt)
+
+        world.update_visible_chunks(camera)
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        glLoadIdentity()
+        camera.apply()
+        world.draw(camera)
+
+        fps = clock.get_fps()
+        font = pygame.font.SysFont("Consolas", 20)  
+        fps_surface = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))  # white text
+        screen.blit(fps_surface, (10, 10))
+
+        pygame.display.flip()
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
