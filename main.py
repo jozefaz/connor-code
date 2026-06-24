@@ -22,9 +22,9 @@ from world import World                          # The world that generates terr
 def main():                                      # Program entry point: set everything up and run the loop
     pygame.init()                                # Start up all the pygame subsystems
 
-    WIDTH, HEIGHT = 800, 600                     # Window size in pixels
+    WIDTH, HEIGHT = 1920, 1080                   # Window size in pixels
     pygame.display.set_mode((WIDTH, HEIGHT), DOUBLEBUF | OPENGL)  # Open an OpenGL window with double buffering
-    pygame.display.set_caption("Minecraft Prototype")  # Set the window title bar text
+    pygame.display.set_caption("Minecraft New worlds")  # Set the window title bar text
 
     pygame.event.set_grab(True)                  # Lock the mouse to the window (for continuous looking)
     pygame.mouse.set_visible(False)              # Hide the cursor while playing
