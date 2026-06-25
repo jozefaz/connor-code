@@ -22,28 +22,62 @@ from glwrap import (                                 # Pull GL helpers/constants
 def make_grass_top() -> Image.Image:                 # Draw the green top face of a grass block
     img = Image.new("RGBA", (32, 32), "#4CAF50")     # Start with a 32x32 image filled with base green
     px = img.load()                                  # Get a pixel-access object so we can edit individual pixels
+
+    green_shades = [
+        (0x4C, 0xAF, 0x50, 255),  # base green
+        (0x56, 0xBB, 0x4F, 255),  # lighter green
+        (0x38, 0x8E, 0x3C, 255),  # darker green
+        (0x6B, 0x9B, 0x3A, 255),  # olive green
+    ]
+    brown_spots = [
+        (0x6D, 0x4C, 0x41, 255),
+        (0x5D, 0x43, 0x32, 255),
+    ]
+
     for y in range(32):                              # Loop over every row
         for x in range(32):                          # Loop over every column
-            if (x + y) % 2 == 0:                      # On a checkerboard pattern (every other pixel)...
-                px[x, y] = (0x38, 0x8E, 0x3C, 255)    # ...paint a darker green for a subtle dithered look
+            shade = green_shades[(x * 3 + y * 2) % len(green_shades)]
+            px[x, y] = shade                          # Paint a varied grass color
+            if (x * y) % 11 == 0:                     # Add scattered brown spots for natural variation
+                px[x, y] = brown_spots[(x + y) % len(brown_spots)]
     return img                                       # Hand back the finished grass-top image
+
 
 def make_grass_side() -> Image.Image:                # Draw the side face: dirt below, a thin grass strip on top
     img = Image.new("RGBA", (32, 32), "#795548")     # Start with a 32x32 image filled with base dirt brown
     px = img.load()                                  # Get pixel access for per-pixel editing
 
-    # Dirt dither
+    grass_shades = [
+        (0x4C, 0xAF, 0x50, 255),
+        (0x56, 0xBB, 0x4F, 255),
+        (0x38, 0x8E, 0x3C, 255),
+    ]
+    dirt_shades = [
+        (0x6D, 0x4C, 0x41, 255),
+        (0x5D, 0x43, 0x32, 255),
+        (0x43, 0x2E, 0x25, 255),
+    ]
+    brown_spots = [
+        (0x6D, 0x4C, 0x41, 255),
+        (0x5D, 0x43, 0x32, 255),
+    ]
+
+    # Dirt portion with extra brown scatter
     for y in range(8, 32):                           # For the lower rows (the dirt portion)...
         for x in range(32):                          # ...across every column...
             if (x + y) % 2 == 0:                      # ...on the checkerboard pattern...
-                px[x, y] = (0x6D, 0x4C, 0x41, 255)    # ...paint a darker brown to texture the dirt
+                px[x, y] = dirt_shades[(x + y) % len(dirt_shades)]
+            elif (x * y) % 13 == 0:                   # occasional darker brown spots
+                px[x, y] = dirt_shades[(x + y + 1) % len(dirt_shades)]
 
-    # Grass strip
+    # Grass strip with color variation and brown scatter near the bottom edge
     for y in range(8):                               # For the top 8 rows (the grassy lip)...
         for x in range(32):                          # ...across every column...
-            px[x, y] = (0x4C, 0xAF, 0x50, 255)        # ...paint the base grass green
-            if (x + y) % 2 == 0:                      # ...and on the checkerboard pattern...
-                px[x, y] = (0x38, 0x8E, 0x3C, 255)    # ...paint the darker green dither
+            px[x, y] = grass_shades[(x + y) % len(grass_shades)]
+            if (x + y) % 5 == 0:                      # occasional darker mottling
+                px[x, y] = (0x38, 0x8E, 0x3C, 255)
+            if y > 4 and (x * y) % 7 == 0:             # small brown patches near the bottom of the grass strip
+                px[x, y] = brown_spots[(x + y) % len(brown_spots)]
 
     return img                                       # Hand back the finished grass-side image
 

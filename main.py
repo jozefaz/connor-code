@@ -43,7 +43,7 @@ def init_opengl(width: int, height: int) -> None:
 
 def main() -> None:
     pygame.init()
-    pygame.display.set_caption("Voxel Engine")
+    pygame.display.set_caption("Minecraft Clone")
 
     width, height = 1960, 1060
     screen = pygame.display.set_mode((width, height), DOUBLEBUF | OPENGL)
@@ -78,7 +78,6 @@ def main() -> None:
         world.draw(camera)
 
         fps = clock.get_fps()
-        font = pygame.font.SysFont("Consolas", 20)  
         fps_surface = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))  # white text
         screen.blit(fps_surface, (100, 100))
 
@@ -89,3 +88,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+print("Game session has exited.")
