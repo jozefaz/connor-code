@@ -10,6 +10,7 @@ import random
 
 from renderer import Renderer, build_mesh
 from textures import load_block_textures
+from boom_particle import boom_particle
 
 
 def fade(t: float) -> float:

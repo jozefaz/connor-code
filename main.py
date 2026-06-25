@@ -8,9 +8,13 @@ import pygame
 from pygame.locals import DOUBLEBUF, OPENGL, QUIT
 
 from OpenGL.GL import (
+    GL_QUADS,
+    glBegin,
+    glColor3f,
     glEnable,
     glClearColor,
     glClear,
+    glEnd,
     glMatrixMode,
     glLoadIdentity,
     GL_COLOR_BUFFER_BIT,
@@ -20,6 +24,7 @@ from OpenGL.GL import (
     GL_PROJECTION,
     GL_MODELVIEW,
     glDepthFunc,
+    glVertex3f,
 )
 from OpenGL.GLU import gluPerspective
 
@@ -76,6 +81,17 @@ def main() -> None:
         glLoadIdentity()
         camera.apply()
         world.draw(camera)
+
+        from glwrap import glBegin, glEnd, glVertex3f, glColor3f, GL_QUADS
+
+        glColor3f(1.0, 0.0, 0.0)  # bright red
+        glBegin(GL_QUADS)
+        glVertex3f(-5, 0, -5)
+        glVertex3f( 5, 0, -5)
+        glVertex3f( 5, 0,  5)
+        glVertex3f(-5, 0,  5)
+        glEnd()
+
 
         fps = clock.get_fps()
         fps_surface = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))  # white text
