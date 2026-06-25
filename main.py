@@ -80,7 +80,7 @@ def main() -> None:
         fps = clock.get_fps()
         font = pygame.font.SysFont("Consolas", 20)  
         fps_surface = font.render(f"FPS: {int(fps)}", True, (255, 255, 255))  # white text
-        screen.blit(fps_surface, (10, 10))
+        screen.blit(fps_surface, (100, 100))
 
         pygame.display.flip()
 
